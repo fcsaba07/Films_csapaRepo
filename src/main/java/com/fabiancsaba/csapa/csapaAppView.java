@@ -1,51 +1,58 @@
 package com.fabiancsaba.csapa;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Route("")
 public class csapaAppView extends VerticalLayout {
 
     private final filmService filmService;
+    private final com.fabiancsaba.csapa.kintlevosegService kintlevosegService;
     private Grid<Film> filmGrid;
     private Grid<kintlevoseg> kintlevosegEntityGrid;
 
     @Autowired
-    public csapaAppView(filmService filmService) {
+    public csapaAppView(filmService filmService, kintlevosegService kintlevosegService) {
         this.filmService = filmService;
+        this.kintlevosegService = kintlevosegService;
 
         // Tabok létrehozása
         Tab filmTab = new Tab("Filmek");
-        Tab anotherTab = new Tab("Másik tábla");
+        Tab kintlevosegTab = new Tab("Kintlevoseg");
 
         // Filmek layout
         VerticalLayout filmLayout = createFilmLayout();
 
-        // Másik layout
-        VerticalLayout anotherLayout = createAnotherEntityLayout();
+        // Kintlevoseg layout
+        VerticalLayout kintlevosegLayout = createKintlevosegLayout();
 
         // Tabs kezelés
-        Tabs tabs = new Tabs(filmTab, anotherTab);
+        Tabs tabs = new Tabs(filmTab, kintlevosegTab);
         tabs.addSelectedChangeListener(event -> {
             if (event.getSelectedTab().equals(filmTab)) {
                 filmLayout.setVisible(true);
-                anotherLayout.setVisible(false);
+                kintlevosegLayout.setVisible(false);
             } else {
                 filmLayout.setVisible(false);
-                anotherLayout.setVisible(true);
+                kintlevosegLayout.setVisible(true);
             }
         });
 
-        add(tabs, filmLayout, anotherLayout);
-        anotherLayout.setVisible(false); // Csak a filmek tab látható kezdetben
+        add(tabs, filmLayout, kintlevosegLayout);
+        kintlevosegLayout.setVisible(false);
     }
 
     private VerticalLayout createFilmLayout() {
@@ -72,13 +79,15 @@ public class csapaAppView extends VerticalLayout {
         return layout;
     }
 
-    private VerticalLayout createAnotherEntityLayout() {
+    private VerticalLayout createKintlevosegLayout() {
         VerticalLayout layout = new VerticalLayout();
-        layout.add(new H1("Másik Tábla"));
+        layout.add(new H1("Kintlevőség Lista"));
+
 
         kintlevosegEntityGrid = new Grid<>(kintlevoseg.class);
-        kintlevosegEntityGrid.setItems();
 
+        kintlevosegEntityGrid.setColumns("filmcim", "nev", "telefonszam", "kivetelDatuma", "visszahozatal");
+        kintlevosegEntityGrid.setItems(getkintlevoseg());
 
         layout.add(kintlevosegEntityGrid);
         return layout;
@@ -88,14 +97,13 @@ public class csapaAppView extends VerticalLayout {
         return filmService.getAllFilms();
     }
 
-    private List<kintlevoseg> getAnotherEntities() {
-        // Adatok lekérése a másik entitáshoz
-        return anotherEntityService.getAllEntities();
+    private List<kintlevoseg> getkintlevoseg() {
+        return kintlevosegService.getAllKintlevoseg();
     }
 
     private Button createRentButton(Film film) {
         Button rentButton = new Button("Kivesz");
-        rentButton.addClickListener(event -> rentFilm(film));
+        rentButton.addClickListener(event -> showKintlevosegForm(film));
         if (film.isBentVan()) {
             return rentButton;
         }
@@ -113,9 +121,49 @@ public class csapaAppView extends VerticalLayout {
         filmGrid.setItems(getFilms());
     }
 
-    private void rentFilm(Film film) {
-        film.setBentVan(false);
-        filmService.SaveFilm(film);
-        filmGrid.setItems(getFilms());
+    //kivételnél a kintlevesog kitöltő form:
+    private void showKintlevosegForm(Film film) {
+
+        Dialog dialog = new Dialog();
+        dialog.setCloseOnEsc(true);
+        dialog.setCloseOnOutsideClick(true);
+
+        // Form elemek
+        TextField nameField = new TextField("Név");
+        TextField phoneField = new TextField("Telefonszám");
+        DatePicker returnDateField = new DatePicker("Visszahozatal (dátum)");
+
+        // A kivétel dátuma legyen a mai dátum
+        LocalDate currentDate = LocalDate.now();
+        returnDateField.setValue(currentDate);
+
+        // A kintlevoseg példányosítása
+        Button saveButton = new Button("Kivesz", event -> {
+            kintlevoseg newKintlevoseg = new kintlevoseg();
+            newKintlevoseg.setNev(nameField.getValue());
+            newKintlevoseg.setTelefonszam(phoneField.getValue());
+            newKintlevoseg.setKivetelDatuma(currentDate);
+            newKintlevoseg.setVisszahozatal(returnDateField.getValue());
+
+            // A film cím és ID mentése
+            newKintlevoseg.setFilmId(film.getId());
+            newKintlevoseg.setFilmcim(film.getCim());
+
+            // A film frissítése
+            film.setBentVan(false);
+            filmService.SaveFilm(film);
+            filmGrid.setItems(getFilms());
+
+            // Kintlevoseg mentése
+            kintlevosegService.saveKintlevoseg(newKintlevoseg);
+
+            // Frissítjük a kintlevoseg gridet
+            kintlevosegEntityGrid.setItems(getkintlevoseg());
+
+            dialog.close();
+        });
+
+        dialog.add(nameField, phoneField, returnDateField, saveButton);
+        dialog.open();
     }
 }
