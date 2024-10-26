@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class kintlevosegService {
@@ -25,5 +26,14 @@ public class kintlevosegService {
         return kintlevosegRepository.save(kintlevoseg);
 
     }
-
+    public List<Long> getAllFilmIdsInKintlevoseg() {
+        List<kintlevoseg> kintlevosegek = getAllKintlevoseg();
+        return kintlevosegek.stream()
+                .map(k -> k.getFilmId())
+                .collect(Collectors.toList());
+    }
+    public kintlevoseg deleteKintlevoseg(kintlevoseg kintlevoseg) {
+        kintlevosegRepository.delete(kintlevoseg);
+        return kintlevoseg;
+    }
 }

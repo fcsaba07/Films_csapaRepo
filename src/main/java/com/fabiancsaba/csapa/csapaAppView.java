@@ -33,10 +33,10 @@ public class csapaAppView extends VerticalLayout {
         Tab filmTab = new Tab("Filmek");
         Tab kintlevosegTab = new Tab("Kintlevoseg");
 
-        // Filmek layout
+        // Film tab
         VerticalLayout filmLayout = createFilmLayout();
 
-        // Kintlevoseg layout
+        // Kintlevoseg tab
         VerticalLayout kintlevosegLayout = createKintlevosegLayout();
 
         // Tabs kezelés
@@ -45,15 +45,19 @@ public class csapaAppView extends VerticalLayout {
             if (event.getSelectedTab().equals(filmTab)) {
                 filmLayout.setVisible(true);
                 kintlevosegLayout.setVisible(false);
+                filmGrid.setItems(getFilms());
             } else {
                 filmLayout.setVisible(false);
                 kintlevosegLayout.setVisible(true);
+                kintlevosegEntityGrid.setItems(getkintlevoseg());
             }
         });
 
         add(tabs, filmLayout, kintlevosegLayout);
         kintlevosegLayout.setVisible(false);
     }
+
+    //layoutok létrehozása
 
     private VerticalLayout createFilmLayout() {
         VerticalLayout layout = new VerticalLayout();
@@ -62,12 +66,8 @@ public class csapaAppView extends VerticalLayout {
         filmGrid = new Grid<>(Film.class);
         filmGrid.setItems(getFilms());
 
-        // Oszlopok megjelenítése
-        filmGrid.setColumns("id", "cim", "kategoria", "megjelenesDatuma");
-
-        // Állapot oszlop
-        filmGrid.addColumn(film -> film.isBentVan() ? "Bent van" : "Nincs bent")
-                .setHeader("Állapot");
+        filmGrid.setColumns("id", "cim", "kategoria", "megjelenesDatuma", "mennyiseg");
+        filmGrid.addColumn(film -> film.isBentVan() ? "Bent van" : "Nincs bent").setHeader("Állapot");
 
         // Kivesz gomb
         filmGrid.addComponentColumn(this::createRentButton).setHeader("");
@@ -81,25 +81,19 @@ public class csapaAppView extends VerticalLayout {
 
     private VerticalLayout createKintlevosegLayout() {
         VerticalLayout layout = new VerticalLayout();
-        layout.add(new H1("Kintlevőség Lista"));
+        layout.add(new H1("Kintlevőségek"));
 
 
         kintlevosegEntityGrid = new Grid<>(kintlevoseg.class);
-
-        kintlevosegEntityGrid.setColumns("filmcim", "nev", "telefonszam", "kivetelDatuma", "visszahozatal");
         kintlevosegEntityGrid.setItems(getkintlevoseg());
 
+        kintlevosegEntityGrid.setColumns("filmcim", "nev", "telefonszam", "kivetelDatuma", "visszahozatal");
+        kintlevosegEntityGrid.addComponentColumn(this::createReturnButton).setHeader("Visszahoz");
         layout.add(kintlevosegEntityGrid);
         return layout;
     }
 
-    private List<Film> getFilms() {
-        return filmService.getAllFilms();
-    }
-
-    private List<kintlevoseg> getkintlevoseg() {
-        return kintlevosegService.getAllKintlevoseg();
-    }
+    //Gombok létrehozása
 
     private Button createRentButton(Film film) {
         Button rentButton = new Button("Kivesz");
@@ -116,12 +110,40 @@ public class csapaAppView extends VerticalLayout {
         return removeButton;
     }
 
-    private void removeFilm(Film film) {
-        filmService.removeFilm(film.getId());
-        filmGrid.setItems(getFilms());
+    private Button createReturnButton(kintlevoseg kintlevoseg) {
+        Button returnButton = new Button("visszahoz");
+        returnButton.addClickListener(event -> returnFilm(kintlevoseg));
+        return returnButton;
     }
 
-    //kivételnél a kintlevesog kitöltő form:
+    //Eventek a gombok mögött
+
+    private void removeFilm(Film film) {
+        List<Long> kintlevosegFilmIds = kintlevosegService.getAllFilmIdsInKintlevoseg();
+
+        if (kintlevosegFilmIds.contains(film.getId())) {
+            Notification.show("Hiba: A filmet kivették. Nem törölhető amíg nem kerül vissza", 3000, Notification.Position.MIDDLE);
+        } else {
+            filmService.removeFilm(film.getId());
+            filmGrid.setItems(getFilms());
+        }
+    }
+
+    private void returnFilm(kintlevoseg kintlevoseg) {
+        long filmID = kintlevoseg.getFilmId();
+        Film film = filmService.getFIlmById(filmID);
+        if (film.getMennyiseg()==0){
+            film.setBentVan(true);
+        }
+        film.setMennyiseg(film.getMennyiseg()+1);
+
+        filmService.SaveFilm(film);
+        kintlevosegService.deleteKintlevoseg(kintlevoseg);
+
+        kintlevosegEntityGrid.setItems(getkintlevoseg());
+    }
+
+
     private void showKintlevosegForm(Film film) {
 
         Dialog dialog = new Dialog();
@@ -149,21 +171,32 @@ public class csapaAppView extends VerticalLayout {
             newKintlevoseg.setFilmId(film.getId());
             newKintlevoseg.setFilmcim(film.getCim());
 
-            // A film frissítése
-            film.setBentVan(false);
-            filmService.SaveFilm(film);
-            filmGrid.setItems(getFilms());
-
-            // Kintlevoseg mentése
             kintlevosegService.saveKintlevoseg(newKintlevoseg);
+
+            // A film frissítése
+            film.setMennyiseg(film.getMennyiseg()-1);
+            if (film.getMennyiseg()==0) {
+                film.setBentVan(false);
+                filmService.SaveFilm(film);
+                filmGrid.setItems(getFilms());
+            } else   filmService.SaveFilm(film);
+            filmGrid.setItems(getFilms());
 
             // Frissítjük a kintlevoseg gridet
             kintlevosegEntityGrid.setItems(getkintlevoseg());
-
             dialog.close();
         });
-
         dialog.add(nameField, phoneField, returnDateField, saveButton);
         dialog.open();
+    }
+
+    //listák lekérdezése
+
+    private List<Film> getFilms() {
+        return filmService.getAllFilms();
+    }
+
+    private List<kintlevoseg> getkintlevoseg() {
+        return kintlevosegService.getAllKintlevoseg();
     }
 }

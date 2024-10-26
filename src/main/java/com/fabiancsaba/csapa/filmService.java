@@ -1,7 +1,5 @@
 package com.fabiancsaba.csapa;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,6 +24,10 @@ public class filmService {
     public void SaveFilm(Film film) {
         filmRepository.save(film);
 
+    }
+    public Film getFIlmById(Long id) {
+        Film film = filmRepository.findById(id).get();
+        return film;
     }
 }
 

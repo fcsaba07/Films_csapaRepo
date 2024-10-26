@@ -22,15 +22,20 @@ public class Film {
     @Column(name = "bent_van")
     private boolean bentVan;
 
+    @Column(name = "mennyiseg")
+    private int mennyiseg;
+
+
     // Konstruktorok, getterek és setterek
 
     public Film() {}
 
-    public Film(String cim, LocalDate megjelenesDatuma, String kategoria, boolean bentVan) {
+    public Film(String cim, LocalDate megjelenesDatuma, String kategoria, boolean bentVan, int mennyiseg) {
         this.cim = cim;
         this.megjelenesDatuma = megjelenesDatuma;
         this.kategoria = kategoria;
         this.bentVan = bentVan;
+        this.mennyiseg = mennyiseg;
     }
 
 
@@ -58,6 +63,14 @@ public class Film {
         this.bentVan = bentVan;
     }
 
+    public int getMennyiseg() {
+        return mennyiseg;
+    }
+
+    public void setMennyiseg(int mennyiseg) {
+        this.mennyiseg = mennyiseg;
+    }
+
     // toString() metódus felüldefiniálása
     @Override
     public String toString() {
@@ -66,6 +79,7 @@ public class Film {
                 ", megjelenés dátuma= " + megjelenesDatuma +
                 ", kategória= '" + kategoria + '\'' +
                 ", bent van= " + bentVan +
+                ", mennyiség= " + mennyiseg + // Új mező a toString-ban
                 '}';
     }
 }
