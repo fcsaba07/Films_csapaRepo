@@ -20,4 +20,8 @@ public class filmService {
     public void removeFilm(Long id) {
         filmRepository.deleteById(id);
     }
+    public void SaveFilm(Film film) {
+        filmRepository.save(film);
+    }
+
 }
