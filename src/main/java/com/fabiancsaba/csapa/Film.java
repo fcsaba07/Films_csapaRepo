@@ -25,6 +25,9 @@ public class Film {
     @Column(name = "mennyiseg")
     private int mennyiseg;
 
+    @Column(name = "film_kep")
+    private byte[] filmKep;
+
 
     // Konstruktorok, getterek és setterek
 
@@ -71,7 +74,14 @@ public class Film {
         this.mennyiseg = mennyiseg;
     }
 
-    // toString() metódus felüldefiniálása
+    public byte[] getFilmKep() {
+        return filmKep;
+    }
+
+    public void setFilmKep(byte[] filmKep) {
+        this.filmKep = filmKep;
+    }
+
     @Override
     public String toString() {
         return "Film :" +
@@ -79,7 +89,8 @@ public class Film {
                 ", megjelenés dátuma= " + megjelenesDatuma +
                 ", kategória= '" + kategoria + '\'' +
                 ", bent van= " + bentVan +
-                ", mennyiség= " + mennyiseg + // Új mező a toString-ban
+                ", mennyiség= " + mennyiseg +
+                ", kép= " + (filmKep != null ? "van" : "nincs") + // Ellenőrzi, hogy van-e kép
                 '}';
     }
 }

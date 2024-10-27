@@ -8,9 +8,11 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.html.Image;
 
 
 import java.time.LocalDate;
+import java.util.Base64;
 import java.util.List;
 
 
@@ -31,11 +33,27 @@ public class filmLayout extends VerticalLayout {
     }
 
     private void setupFilmGrid() {
-        filmGrid = new Grid<>(Film.class);
+        filmGrid = new Grid<>();
+        filmGrid.addComponentColumn(this::createRemoveButton).setHeader("Törlés");
+        filmGrid.addComponentColumn(this::createFilmImage).setHeader("Kép");
+        filmGrid.addColumn(Film::getCim).setHeader("Cím");
+        filmGrid.addColumn(Film::getKategoria).setHeader("Kategória");
+        filmGrid.addColumn(Film::getMegjelenesDatuma).setHeader("Megjelenés Dátuma");
+        filmGrid.addColumn(Film::getMennyiseg).setHeader("Mennyiség");
+        filmGrid.addComponentColumn(this::createRentButton).setHeader("Kivétel");
+
         filmGrid.setItems(filmService.getAllFilms());
-        filmGrid.setColumns("cim", "kategoria", "megjelenesDatuma", "mennyiseg");
-        filmGrid.addComponentColumn(this::createRentButton).setHeader("");
-        filmGrid.addComponentColumn(this::createRemoveButton).setHeader("");
+    }
+
+    private Image createFilmImage(Film film) {
+        byte[] imageBytes = film.getFilmKep(); // Kép byte tömb lekérése
+        String imageBase64 = imageBytes != null ? Base64.getEncoder().encodeToString(imageBytes) : "";
+        if (imageBase64.isEmpty()) {
+            return null;
+        }
+        Image image = new Image(imageBytes != null ? "data:image/jpeg;base64," + imageBase64 : "placeholder.jpg", film.getCim());
+        image.setHeight("100px");
+        return image;
     }
 
     private Button createRentButton(Film film) {
@@ -104,6 +122,7 @@ public class filmLayout extends VerticalLayout {
             filmGrid.setItems(getFilms());
         }
     }
+
 
     public void refreshfilms() {
         filmGrid.setItems(getFilms());

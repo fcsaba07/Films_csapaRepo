@@ -1,0 +1,36 @@
+SELECT * FROM filmek;
+SELECT * FROM kintlevoseg;
+
+CREATE TABLE filmek (
+id SERIAL PRIMARY KEY,
+cim VARCHAR(255) NOT NULL,
+megjelenes_datuma DATE,
+kategoria VARCHAR(100),
+bent_van BOOLEAN DEFAULT FALSE,
+mennyiseg VARCHAR(15)
+);
+
+INSERT INTO filmek (cim, megjelenes_datuma, kategoria, bent_van, mennyiseg) VALUES
+('A Gyűrűk Ura: A Gyűrű Szövetsége', '2001-12-19', 'Fantasy', TRUE, '10'),
+('Harry Potter és a Bölcsek Köve', '2001-11-16', 'Fantasy', TRUE, '5'),
+('Inception', '2010-07-16', 'Sci-fi', TRUE, '3'),
+('Titanic', '1997-12-19', 'Romantikus', TRUE, '7'),
+('A Sötét Lovag', '2008-07-18', 'Akció', TRUE, '2'),
+('Pókember: Hazatérés', '2017-07-07', 'Akció', TRUE, '8'),
+('Jurassic Park', '1993-06-11', 'Sci-fi', TRUE, '4'),
+('Star Wars: A Birodalom Visszavág', '1980-05-21', 'Sci-fi', TRUE, '1'),
+('Forrest Gump', '1994-07-06', 'Dráma', TRUE, '6'),
+('Képregény hősök: Végtelen háború', '2018-04-27', 'Akció', TRUE, '9');
+
+TRUNCATE TABLE filmek;
+TRUNCATE TABLE kintlevoseg;
+
+CREATE TABLE Kintlevoseg (
+id SERIAL PRIMARY KEY,
+nev VARCHAR(100) NOT NULL,
+telefonszam VARCHAR(15),
+kivetel_datuma DATE NOT NULL,
+visszahozatal DATE,
+filmId BIGINT,
+filmCim VARCHAR(255)
+);
