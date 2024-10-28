@@ -14,12 +14,12 @@ public class imageUploader {
         String username = "postgres";
         String password = "password";
 
-        // A képek mappájának elérési útja
+
         String imagesFolderPath = "C:\\work\\csapa\\src\\main\\resources\\images";
 
         try (Connection conn = DriverManager.getConnection(jdbcUrl, username, password)) {
 
-            // Képfájlok beolvasása a megadott mappából
+
             File imagesFolder = new File(imagesFolderPath);
             File[] imageFiles = imagesFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg") || name.toLowerCase().endsWith(".png"));
 
@@ -28,11 +28,11 @@ public class imageUploader {
                     String imageName = imageFile.getName().substring(0, imageFile.getName().lastIndexOf('.'));
 
                     try (InputStream input = new FileInputStream(imageFile)) {
-                        // SQL lekérdezés előkészítése a kép feltöltéséhez a filmek táblába, ahol a cím egyezik a kép nevével
+
                         String sql = "UPDATE filmek SET film_kep = ? WHERE cim = ?";
                         PreparedStatement stmt = conn.prepareStatement(sql);
                         stmt.setBinaryStream(1, input);
-                        stmt.setString(2, imageName); // A képfájl neve alapján keresés
+                        stmt.setString(2, imageName);
                         int rowsUpdated = stmt.executeUpdate();
 
                         if (rowsUpdated > 0) {

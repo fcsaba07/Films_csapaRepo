@@ -34,7 +34,7 @@ public class filmLayout extends VerticalLayout {
 
     private void setupFilmGrid() {
         filmGrid = new Grid<>();
-        filmGrid.addComponentColumn(this::createRemoveButton).setHeader("Törlés");
+        filmGrid.addComponentColumn(this::createRemoveButton).setHeader("Törlés").setWidth("1px");
         filmGrid.addComponentColumn(this::createFilmImage).setHeader("Kép");
         filmGrid.addColumn(Film::getCim).setHeader("Cím");
         filmGrid.addColumn(Film::getKategoria).setHeader("Kategória");
@@ -43,15 +43,18 @@ public class filmLayout extends VerticalLayout {
         filmGrid.addComponentColumn(this::createRentButton).setHeader("Kivétel");
 
         filmGrid.setItems(filmService.getAllFilms());
+        filmGrid.setAllRowsVisible(true);
     }
 
     private Image createFilmImage(Film film) {
-        byte[] imageBytes = film.getFilmKep(); // Kép byte tömb lekérése
-        String imageBase64 = imageBytes != null ? Base64.getEncoder().encodeToString(imageBytes) : "";
-        if (imageBase64.isEmpty()) {
+        byte[] imageBytes = film.getFilmKep();
+        if (imageBytes == null || imageBytes.length == 0) {
             return null;
         }
-        Image image = new Image(imageBytes != null ? "data:image/jpeg;base64," + imageBase64 : "placeholder.jpg", film.getCim());
+        String imageBase64 = Base64.getEncoder().encodeToString(imageBytes);
+
+        String imageUrl = "data:image/jpeg;base64," + imageBase64;
+        Image image = new Image(imageUrl, film.getCim());
         image.setHeight("100px");
         return image;
     }
@@ -87,26 +90,30 @@ public class filmLayout extends VerticalLayout {
 
         saveButton.addClickListener(e -> {
 
-            // kintlevoseg példányosítása
-            kintlevoseg newKintlevoseg = new kintlevoseg();
-            newKintlevoseg.setFilmcim(film.getCim());
-            newKintlevoseg.setFilmId(film.getId());
-            newKintlevoseg.setNev(nameTextfield.getValue());
-            newKintlevoseg.setTelefonszam(phoneTextfield.getValue());
-            newKintlevoseg.setVisszahozatal(returnDateField.getValue());
-            newKintlevoseg.setKivetelDatuma(currentDate);
-
-            kintlevosegService.saveKintlevoseg(newKintlevoseg);
-
-
-            film.setMennyiseg(film.getMennyiseg() - 1);
-            if (film.getMennyiseg() == 0) {
-                film.setBentVan(false);
+            if(nameTextfield.getValue()=="" || phoneTextfield.getValue()=="") {
+                Notification.show("Hiba: Név, telefonszám kitöltése kötelező", 3000, Notification.Position.MIDDLE);
             }
-            filmService.SaveFilm(film);
-            filmGrid.setItems(getFilms());
+            else {
+                // kintlevoseg példányosítása
+                kintlevoseg newKintlevoseg = new kintlevoseg();
+                newKintlevoseg.setFilmcim(film.getCim());
+                newKintlevoseg.setFilmId(film.getId());
+                newKintlevoseg.setNev(nameTextfield.getValue());
+                newKintlevoseg.setTelefonszam(phoneTextfield.getValue());
+                newKintlevoseg.setVisszahozatal(returnDateField.getValue());
+                newKintlevoseg.setKivetelDatuma(currentDate);
 
-            dialog.close();
+                kintlevosegService.saveKintlevoseg(newKintlevoseg);
+
+                film.setMennyiseg(film.getMennyiseg() - 1);
+                if (film.getMennyiseg() == 0) {
+                    film.setBentVan(false);
+                }
+                filmService.SaveFilm(film);
+                filmGrid.setItems(getFilms());
+
+                dialog.close();
+            }
         });
         dialog.add(nameTextfield, phoneTextfield, returnDateField, saveButton);
         dialog.open();

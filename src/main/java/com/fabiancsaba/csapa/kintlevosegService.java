@@ -36,4 +36,6 @@ public class kintlevosegService {
         kintlevosegRepository.delete(kintlevoseg);
         return kintlevoseg;
     }
+
+
 }

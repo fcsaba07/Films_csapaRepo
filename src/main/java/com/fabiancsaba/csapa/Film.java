@@ -29,16 +29,16 @@ public class Film {
     private byte[] filmKep;
 
 
-    // Konstruktorok, getterek és setterek
-
-    public Film() {}
-
     public Film(String cim, LocalDate megjelenesDatuma, String kategoria, boolean bentVan, int mennyiseg) {
         this.cim = cim;
         this.megjelenesDatuma = megjelenesDatuma;
         this.kategoria = kategoria;
         this.bentVan = bentVan;
         this.mennyiseg = mennyiseg;
+    }
+
+    public Film() {
+
     }
 
 
